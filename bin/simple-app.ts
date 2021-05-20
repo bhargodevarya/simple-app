@@ -2,9 +2,10 @@
 import 'source-map-support/register';
 import * as cdk from '@aws-cdk/core';
 import { SimpleAppStack } from '../lib/simple-app-stack';
+import { Ec2SampleStack } from '../lib/ec2-sample-stack';
 
 const app = new cdk.App();
-new SimpleAppStack(app, 'SimpleAppStack', {
+//new SimpleAppStack(app, 'SimpleAppStack', {
   /* If you don't specify 'env', this stack will be environment-agnostic.
    * Account/Region-dependent features and context lookups will not work,
    * but a single synthesized template can be deployed anywhere. */
@@ -18,6 +19,11 @@ new SimpleAppStack(app, 'SimpleAppStack', {
   // env: { account: '123456789012', region: 'us-east-1' },
 
   /* For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html */
-});
+//});
+
+
+new Ec2SampleStack(app, 'ec2AppStack', {
+  env: {region: 'us-east-1', account: '519731107059'}
+})
 
 app.synth()
