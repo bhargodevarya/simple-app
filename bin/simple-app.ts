@@ -39,7 +39,7 @@ const app = new cdk.App();
 //   env: {region: 'us-east-1', account: '519731107059'}
 // })
 
-new DynamoDBStack(app, 'monthlyChallengePipelineStack', {
+new DynamoDBStack(app, 'DynamoDBStack', {
   env: {region: 'us-east-1', account: '519731107059'}
 })
 

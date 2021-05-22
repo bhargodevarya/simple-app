@@ -17,7 +17,7 @@ export class DynamoDBStack extends cdk.Stack {
             }
         })
 
-        const user = iam.User.fromUserName(this, '', 'AWSLearner_admin')
+        const user = iam.User.fromUserName(this, 'admin_user', 'AWSLearner_admin')
         
         // Another way of granting access
         //user.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonDynamoDBFullAccess'))

@@ -1,0 +1,41 @@
+Resources:
+  stackTable0D19F03F:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: "N"
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      TableName: stackTable
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Metadata:
+      aws:cdk:path: monthlyChallengePipelineStack/stackTable/Resource
+  CDKMetadata:
+    Type: AWS::CDK::Metadata
+    Properties:
+      Analytics: v2:deflate64:H4sIAAAAAAAAE02MTQrCMBBGz+J+Os1Ai1uhN1AvkE5SSGszkB9FQu5uW0FcfW/xvUdYSHWoThf9ig2bpWUJFsstaV5gEB9TyJxgmPzVRsmBbQVS/b9RdjBvr1cxI5a7Hh92Fw6ocAR/cgUvxuIc2yd1SOctNEfnmpB9cut2/O4H4HCCXpgAAAA=
+    Metadata:
+      aws:cdk:path: monthlyChallengePipelineStack/CDKMetadata/Default
+Parameters:
+  BootstrapVersion:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /cdk-bootstrap/hnb659fds/version
+    Description: Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store.
+Rules:
+  CheckBootstrapVersion:
+    Assertions:
+      - Assert:
+          Fn::Not:
+            - Fn::Contains:
+                - - "1"
+                  - "2"
+                  - "3"
+                - Ref: BootstrapVersion
+        AssertDescription: CDK bootstrap stack version 4 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.
+
