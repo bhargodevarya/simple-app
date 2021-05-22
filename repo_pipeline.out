@@ -1,0 +1,431 @@
+Resources:
+  monthlyChallengePipelineArtifactsBucketEncryptionKey9CFC4B47:
+    Type: AWS::KMS::Key
+    Properties:
+      KeyPolicy:
+        Statement:
+          - Action: kms:*
+            Effect: Allow
+            Principal:
+              AWS:
+                Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - :iam::519731107059:root
+            Resource: "*"
+        Version: "2012-10-17"
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+    Metadata:
+      aws:cdk:path: monthlyChallengePipelineStack/monthlyChallengePipeline/ArtifactsBucketEncryptionKey/Resource
+  monthlyChallengePipelineArtifactsBucketEncryptionKeyAlias3649B420:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: alias/codepipeline-monthlychallengepipelinestackmonthlychallengepipeline2e1350bb
+      TargetKeyId:
+        Fn::GetAtt:
+          - monthlyChallengePipelineArtifactsBucketEncryptionKey9CFC4B47
+          - Arn
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+    Metadata:
+      aws:cdk:path: monthlyChallengePipelineStack/monthlyChallengePipeline/ArtifactsBucketEncryptionKeyAlias/Resource
+  monthlyChallengePipelineArtifactsBucket34AF1295:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              KMSMasterKeyID:
+                Fn::GetAtt:
+                  - monthlyChallengePipelineArtifactsBucketEncryptionKey9CFC4B47
+                  - Arn
+              SSEAlgorithm: aws:kms
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Metadata:
+      aws:cdk:path: monthlyChallengePipelineStack/monthlyChallengePipeline/ArtifactsBucket/Resource
+  monthlyChallengePipelineRole15C36593:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: codepipeline.amazonaws.com
+        Version: "2012-10-17"
+    Metadata:
+      aws:cdk:path: monthlyChallengePipelineStack/monthlyChallengePipeline/Role/Resource
+  monthlyChallengePipelineRoleDefaultPolicy234E5DDE:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - s3:GetObject*
+              - s3:GetBucket*
+              - s3:List*
+              - s3:DeleteObject*
+              - s3:PutObject
+              - s3:Abort*
+            Effect: Allow
+            Resource:
+              - Fn::GetAtt:
+                  - monthlyChallengePipelineArtifactsBucket34AF1295
+                  - Arn
+              - Fn::Join:
+                  - ""
+                  - - Fn::GetAtt:
+                        - monthlyChallengePipelineArtifactsBucket34AF1295
+                        - Arn
+                    - /*
+          - Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - monthlyChallengePipelineArtifactsBucketEncryptionKey9CFC4B47
+                - Arn
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - monthlyChallengePipelinecheckoutsourceCheckoutCodePipelineActionRole20B477A6
+                - Arn
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - monthlyChallengePipelinebuildrepositoryBreuildCodePipelineActionRole2FA45D05
+                - Arn
+        Version: "2012-10-17"
+      PolicyName: monthlyChallengePipelineRoleDefaultPolicy234E5DDE
+      Roles:
+        - Ref: monthlyChallengePipelineRole15C36593
+    Metadata:
+      aws:cdk:path: monthlyChallengePipelineStack/monthlyChallengePipeline/Role/DefaultPolicy/Resource
+  monthlyChallengePipeline28BCD6EC:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      RoleArn:
+        Fn::GetAtt:
+          - monthlyChallengePipelineRole15C36593
+          - Arn
+      Stages:
+        - Actions:
+            - ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: CodeCommit
+                Version: "1"
+              Configuration:
+                RepositoryName: monthly_challenge
+                BranchName: main
+                PollForSourceChanges: true
+              Name: sourceCheckout
+              OutputArtifacts:
+                - Name: Artifact_checkout_sourceCheckout
+              RoleArn:
+                Fn::GetAtt:
+                  - monthlyChallengePipelinecheckoutsourceCheckoutCodePipelineActionRole20B477A6
+                  - Arn
+              RunOrder: 1
+          Name: checkout
+        - Actions:
+            - ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: "1"
+              Configuration:
+                ProjectName:
+                  Ref: monthlychallengebuildproject460482EB
+              InputArtifacts:
+                - Name: Artifact_checkout_sourceCheckout
+              Name: repositoryBreuild
+              OutputArtifacts:
+                - Name: Artifact_build_repositoryBreuild
+              RoleArn:
+                Fn::GetAtt:
+                  - monthlyChallengePipelinebuildrepositoryBreuildCodePipelineActionRole2FA45D05
+                  - Arn
+              RunOrder: 1
+          Name: build
+      ArtifactStore:
+        EncryptionKey:
+          Id:
+            Fn::GetAtt:
+              - monthlyChallengePipelineArtifactsBucketEncryptionKey9CFC4B47
+              - Arn
+          Type: KMS
+        Location:
+          Ref: monthlyChallengePipelineArtifactsBucket34AF1295
+        Type: S3
+      Name: monthlyChallengePipeline
+    DependsOn:
+      - monthlyChallengePipelineRoleDefaultPolicy234E5DDE
+      - monthlyChallengePipelineRole15C36593
+    Metadata:
+      aws:cdk:path: monthlyChallengePipelineStack/monthlyChallengePipeline/Resource
+  monthlyChallengePipelinecheckoutsourceCheckoutCodePipelineActionRole20B477A6:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              AWS:
+                Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - :iam::519731107059:root
+        Version: "2012-10-17"
+    Metadata:
+      aws:cdk:path: monthlyChallengePipelineStack/monthlyChallengePipeline/checkout/sourceCheckout/CodePipelineActionRole/Resource
+  monthlyChallengePipelinecheckoutsourceCheckoutCodePipelineActionRoleDefaultPolicy9C3852C2:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - s3:GetObject*
+              - s3:GetBucket*
+              - s3:List*
+              - s3:DeleteObject*
+              - s3:PutObject
+              - s3:Abort*
+            Effect: Allow
+            Resource:
+              - Fn::GetAtt:
+                  - monthlyChallengePipelineArtifactsBucket34AF1295
+                  - Arn
+              - Fn::Join:
+                  - ""
+                  - - Fn::GetAtt:
+                        - monthlyChallengePipelineArtifactsBucket34AF1295
+                        - Arn
+                    - /*
+          - Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - monthlyChallengePipelineArtifactsBucketEncryptionKey9CFC4B47
+                - Arn
+          - Action:
+              - codecommit:GetBranch
+              - codecommit:GetCommit
+              - codecommit:UploadArchive
+              - codecommit:GetUploadArchiveStatus
+              - codecommit:CancelUploadArchive
+            Effect: Allow
+            Resource:
+              Fn::Join:
+                - ""
+                - - "arn:"
+                  - Ref: AWS::Partition
+                  - :codecommit:us-east-1:519731107059:monthly_challenge
+        Version: "2012-10-17"
+      PolicyName: monthlyChallengePipelinecheckoutsourceCheckoutCodePipelineActionRoleDefaultPolicy9C3852C2
+      Roles:
+        - Ref: monthlyChallengePipelinecheckoutsourceCheckoutCodePipelineActionRole20B477A6
+    Metadata:
+      aws:cdk:path: monthlyChallengePipelineStack/monthlyChallengePipeline/checkout/sourceCheckout/CodePipelineActionRole/DefaultPolicy/Resource
+  monthlyChallengePipelinebuildrepositoryBreuildCodePipelineActionRole2FA45D05:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              AWS:
+                Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - :iam::519731107059:root
+        Version: "2012-10-17"
+    Metadata:
+      aws:cdk:path: monthlyChallengePipelineStack/monthlyChallengePipeline/build/repositoryBreuild/CodePipelineActionRole/Resource
+  monthlyChallengePipelinebuildrepositoryBreuildCodePipelineActionRoleDefaultPolicyD8AC3661:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - codebuild:BatchGetBuilds
+              - codebuild:StartBuild
+              - codebuild:StopBuild
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - monthlychallengebuildproject460482EB
+                - Arn
+        Version: "2012-10-17"
+      PolicyName: monthlyChallengePipelinebuildrepositoryBreuildCodePipelineActionRoleDefaultPolicyD8AC3661
+      Roles:
+        - Ref: monthlyChallengePipelinebuildrepositoryBreuildCodePipelineActionRole2FA45D05
+    Metadata:
+      aws:cdk:path: monthlyChallengePipelineStack/monthlyChallengePipeline/build/repositoryBreuild/CodePipelineActionRole/DefaultPolicy/Resource
+  monthlychallengebuildprojectRoleD6E82C6E:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+        Version: "2012-10-17"
+    Metadata:
+      aws:cdk:path: monthlyChallengePipelineStack/monthlychallengebuild_project/Role/Resource
+  monthlychallengebuildprojectRoleDefaultPolicyEACB859F:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Effect: Allow
+            Resource:
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - :logs:us-east-1:519731107059:log-group:/aws/codebuild/
+                    - Ref: monthlychallengebuildproject460482EB
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - :logs:us-east-1:519731107059:log-group:/aws/codebuild/
+                    - Ref: monthlychallengebuildproject460482EB
+                    - :*
+          - Action:
+              - codebuild:CreateReportGroup
+              - codebuild:CreateReport
+              - codebuild:UpdateReport
+              - codebuild:BatchPutTestCases
+              - codebuild:BatchPutCodeCoverages
+            Effect: Allow
+            Resource:
+              Fn::Join:
+                - ""
+                - - "arn:"
+                  - Ref: AWS::Partition
+                  - :codebuild:us-east-1:519731107059:report-group/
+                  - Ref: monthlychallengebuildproject460482EB
+                  - -*
+          - Action:
+              - s3:GetObject*
+              - s3:GetBucket*
+              - s3:List*
+              - s3:DeleteObject*
+              - s3:PutObject
+              - s3:Abort*
+            Effect: Allow
+            Resource:
+              - Fn::GetAtt:
+                  - monthlyChallengePipelineArtifactsBucket34AF1295
+                  - Arn
+              - Fn::Join:
+                  - ""
+                  - - Fn::GetAtt:
+                        - monthlyChallengePipelineArtifactsBucket34AF1295
+                        - Arn
+                    - /*
+          - Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - monthlyChallengePipelineArtifactsBucketEncryptionKey9CFC4B47
+                - Arn
+          - Action:
+              - kms:Decrypt
+              - kms:Encrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - monthlyChallengePipelineArtifactsBucketEncryptionKey9CFC4B47
+                - Arn
+        Version: "2012-10-17"
+      PolicyName: monthlychallengebuildprojectRoleDefaultPolicyEACB859F
+      Roles:
+        - Ref: monthlychallengebuildprojectRoleD6E82C6E
+    Metadata:
+      aws:cdk:path: monthlyChallengePipelineStack/monthlychallengebuild_project/Role/DefaultPolicy/Resource
+  monthlychallengebuildproject460482EB:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:1.0
+        ImagePullCredentialsType: CODEBUILD
+        PrivilegedMode: false
+        Type: LINUX_CONTAINER
+      ServiceRole:
+        Fn::GetAtt:
+          - monthlychallengebuildprojectRoleD6E82C6E
+          - Arn
+      Source:
+        BuildSpec: ./buildspec.yml
+        Type: CODEPIPELINE
+      EncryptionKey:
+        Fn::GetAtt:
+          - monthlyChallengePipelineArtifactsBucketEncryptionKey9CFC4B47
+          - Arn
+      Name: monthlychallengebuild_project
+    Metadata:
+      aws:cdk:path: monthlyChallengePipelineStack/monthlychallengebuild_project/Resource
+  CDKMetadata:
+    Type: AWS::CDK::Metadata
+    Properties:
+      Analytics: v2:deflate64:H4sIAAAAAAAAE02Pyw7CIBBFv8U9Tkuscetj6aapX1DpmExLoeGhMYR/t1Bfq3sYmHu5HAIvKyhX+/Zh16IbCqENQri4VgzspJV1xgvHTjfVoNXeCIyMl9v/jZAgCN3hRBNKUvN+/aa0+OHIhtFCOOMzTZMcJLU2HTJEZjcQjl4MmAMXiozaEUKjZTbLWmtJIrssFFlKv3qS3S+6NrrH5etvjOldavfr9S0136nZA3pb3HkFfDc37C3R2njlaERoFn0BZELhCjEBAAA=
+    Metadata:
+      aws:cdk:path: monthlyChallengePipelineStack/CDKMetadata/Default
+Parameters:
+  BootstrapVersion:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /cdk-bootstrap/hnb659fds/version
+    Description: Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store.
+Rules:
+  CheckBootstrapVersion:
+    Assertions:
+      - Assert:
+          Fn::Not:
+            - Fn::Contains:
+                - - "1"
+                  - "2"
+                  - "3"
+                - Ref: BootstrapVersion
+        AssertDescription: CDK bootstrap stack version 4 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.
+

@@ -3,6 +3,8 @@ import 'source-map-support/register';
 import * as cdk from '@aws-cdk/core';
 import { SimpleAppStack } from '../lib/simple-app-stack';
 import { Ec2SampleStack } from '../lib/ec2-sample-stack';
+import { MonthlyChallengeRepoStack } from '../lib/monthly_challenge_repo_stack';
+import { MonthlyChallengePipelineStack } from '../lib/monthly-challenge-pipeline-stack';
 
 const app = new cdk.App();
 //new SimpleAppStack(app, 'SimpleAppStack', {
@@ -22,7 +24,17 @@ const app = new cdk.App();
 //});
 
 
-new Ec2SampleStack(app, 'ec2AppStack', {
+// Creating a simple EC2 instance
+// new Ec2SampleStack(app, 'ec2AppStack', {
+//   env: {region: 'us-east-1', account: '519731107059'}
+// })
+
+// Creating the monthly_challenge repository
+// new MonthlyChallengeRepoStack(app, 'monthlyChallengeRepoStack', {
+//   env: {region: 'us-east-1', account: '519731107059'}
+// })
+
+new MonthlyChallengePipelineStack(app, 'monthlyChallengePipelineStack', {
   env: {region: 'us-east-1', account: '519731107059'}
 })
 

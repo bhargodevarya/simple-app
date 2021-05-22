@@ -1,0 +1,31 @@
+Resources:
+  repoBEC318EA:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: monthly_challenge
+      RepositoryDescription: Django app
+    Metadata:
+      aws:cdk:path: monthlyChallengeRepoStack/repo/Resource
+  CDKMetadata:
+    Type: AWS::CDK::Metadata
+    Properties:
+      Analytics: v2:deflate64:H4sIAAAAAAAAE02MQQqDMBBFz9J9HBOwdFvwBukJZJxClGRKZtJSQu5eqQiuHg/++w6qswPYy336SIfz2iNngvrQCVczchLNBdWMz+RJuGSkZpy9nos/eSbkGINC9fRiCcr5u2eHtWbSNoNF+rcbwN22k0VC6HJJGiKB3/kDu+sw45QAAAA=
+    Metadata:
+      aws:cdk:path: monthlyChallengeRepoStack/CDKMetadata/Default
+Parameters:
+  BootstrapVersion:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /cdk-bootstrap/hnb659fds/version
+    Description: Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store.
+Rules:
+  CheckBootstrapVersion:
+    Assertions:
+      - Assert:
+          Fn::Not:
+            - Fn::Contains:
+                - - "1"
+                  - "2"
+                  - "3"
+                - Ref: BootstrapVersion
+        AssertDescription: CDK bootstrap stack version 4 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.
+
