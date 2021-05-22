@@ -5,6 +5,7 @@ import { SimpleAppStack } from '../lib/simple-app-stack';
 import { Ec2SampleStack } from '../lib/ec2-sample-stack';
 import { MonthlyChallengeRepoStack } from '../lib/monthly_challenge_repo_stack';
 import { MonthlyChallengePipelineStack } from '../lib/monthly-challenge-pipeline-stack';
+import { DynamoDBStack } from '../lib/dynamoDB_stack';
 
 const app = new cdk.App();
 //new SimpleAppStack(app, 'SimpleAppStack', {
@@ -34,7 +35,11 @@ const app = new cdk.App();
 //   env: {region: 'us-east-1', account: '519731107059'}
 // })
 
-new MonthlyChallengePipelineStack(app, 'monthlyChallengePipelineStack', {
+// new MonthlyChallengePipelineStack(app, 'monthlyChallengePipelineStack', {
+//   env: {region: 'us-east-1', account: '519731107059'}
+// })
+
+new DynamoDBStack(app, 'DynamoDBStack', {
   env: {region: 'us-east-1', account: '519731107059'}
 })
 
